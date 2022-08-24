@@ -1,10 +1,12 @@
-import { Stack, StackProps } from 'aws-cdk-lib';
+#!/usr/bin/env node
+import 'source-map-support/register';
+import { App, Stack, StackProps } from 'aws-cdk-lib';
 import * as appconfig from 'aws-cdk-lib/aws-appconfig';
+import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Construct } from 'constructs';
 import { join } from 'path';
-import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 
 export class AwsLambdaAppConfigStack extends Stack {
     constructor(scope: Construct, id: string, props?: StackProps) {
@@ -25,14 +27,17 @@ export class AwsLambdaAppConfigStack extends Stack {
             locationUri: 'hosted',
             name: 'DemoConfigurationProfile',
         });
-    
+        
         const hostedConfigurationProfile = new appconfig.CfnHostedConfigurationVersion(this, 'AppConfigHostedConfigurationProfile', {
             applicationId: application.ref,
             configurationProfileId: configurationProfile.ref,
             contentType: 'application/json',
-            content: '{\"boolEnableLimitResults\": true, \"intResultLimit\":5}'
+            content: JSON.stringify({
+                boolEnableLimitResults: true,
+                intResultLimit: 5
+            })
         });
-    
+        
         const deploymentStrategy = new appconfig.CfnDeploymentStrategy(this, 'AppConfigDeploymentStrategy', {
             name: 'Custom.AllAtOnce',
             deploymentDurationInMinutes: 0,
@@ -40,7 +45,7 @@ export class AwsLambdaAppConfigStack extends Stack {
             replicateTo: 'NONE',
             growthType: 'LINEAR',
         });
-    
+        
         const deployment = new appconfig.CfnDeployment(this, 'AppConfigDeployment', {
             applicationId: application.ref,
             configurationProfileId: configurationProfile.ref,
@@ -54,9 +59,9 @@ export class AwsLambdaAppConfigStack extends Stack {
             'arn:aws:lambda:us-east-1:027255383542:layer:AWS-AppConfig-Extension:69');
         
         const lambda = new NodejsFunction(this, 'AppConfigDemoFunction', {
-            entry: join(__dirname, `/../src/lambdas/demo/handler.ts`),
+            entry: join(__dirname, `./src/lambdas/demo/handler.ts`),
             handler: 'handler',
-            depsLockFilePath: join(__dirname, `/../package-lock.json`),
+            depsLockFilePath: join(__dirname, `./package-lock.json`),
             runtime: Runtime.NODEJS_14_X,
             layers: [ layer ],
             environment: {
@@ -83,3 +88,8 @@ export class AwsLambdaAppConfigStack extends Stack {
         lambda.node.addDependency(application, environment, configurationProfile);
     }
 }
+
+const app = new App();
+new AwsLambdaAppConfigStack(app, 'AwsLambdaAppConfigStack', {
+    env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION }
+});
