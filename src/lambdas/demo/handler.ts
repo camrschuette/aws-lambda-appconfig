@@ -14,10 +14,12 @@ const environment = env.AWS_APPCONFIG_ENVIRONMENT;
 const configuration = env.AWS_APPCONFIG_CONFIGURATION;
 
 export const handler = async () => {
+    const start = +new Date();
     const {data} = await axios.get(`/applications/${application}/environments/${environment}/configurations/${configuration}`, {
         baseURL: `http://localhost:${port}`,
         responseType: 'json'
     });
     
     console.log(data);
+    console.log(`Duration ${+new Date() - start}`);
 };
