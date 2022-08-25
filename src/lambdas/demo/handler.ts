@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { cleanEnv, num, str } from 'envalid';
+import { SomeApiSchema } from './validation';
 
 const env = cleanEnv(process.env, {
     AWS_APPCONFIG_EXTENSION_HTTP_PORT: num(),
@@ -14,12 +15,13 @@ const environment = env.AWS_APPCONFIG_ENVIRONMENT;
 const configuration = env.AWS_APPCONFIG_CONFIGURATION;
 
 export const handler = async () => {
-    const start = +new Date();
     const {data} = await axios.get(`/applications/${application}/environments/${environment}/configurations/${configuration}`, {
         baseURL: `http://localhost:${port}`,
         responseType: 'json'
     });
     
-    console.log(data);
-    console.log(`Duration ${+new Date() - start}`);
+    // Validate configuration data
+    const someApiConfig = await SomeApiSchema.parseAsync(data);
+    
+    console.log(`We can call the SomeApi at ${someApiConfig.host} at a rate of ${someApiConfig.rateLimit.pMin} calls per minute`);
 };

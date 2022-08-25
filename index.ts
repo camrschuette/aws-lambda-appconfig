@@ -33,8 +33,12 @@ export class AwsLambdaAppConfigStack extends Stack {
             configurationProfileId: configurationProfile.ref,
             contentType: 'application/json',
             content: JSON.stringify({
-                boolEnableLimitResults: true,
-                intResultLimit: 5
+                someApi: {
+                    host: 'http://some-api',
+                    rateLimit: {
+                        pMin: 100
+                    }
+                }
             })
         });
         

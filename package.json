@@ -1,12 +1,20 @@
 {
   "name": "aws-lambda-appconfig",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "private": true,
+  "author": "Cameron Schuette <cam.r.schuette@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/camrschuette/aws-lambda-appconfig.git"
+  },
+  "engines": {
+    "node": "~14.0.0"
+  },
   "bin": {
     "aws-lambda-appconfig": "bin/aws-lambda-appconfig.js"
   },
   "scripts": {
     "build": "tsc",
-    "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk"
   },
@@ -25,6 +33,7 @@
     "axios": "^0.27.2",
     "constructs": "^10.1.85",
     "envalid": "^7.3.1",
-    "source-map-support": "^0.5.21"
+    "source-map-support": "^0.5.21",
+    "zod": "^3.18.0"
   }
 }
