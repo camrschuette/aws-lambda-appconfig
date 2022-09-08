@@ -13,8 +13,7 @@ export class AwsLambdaAppConfigStack extends Stack {
         super(scope, id, props);
         
         const application = new appconfig.CfnApplication(this, 'AppConfigApplication', {
-            name: 'DemoExtensionApplication',
-            description: 'Description for my demo'
+            name: 'DemoApplication'
         });
         
         const environment = new appconfig.CfnEnvironment(this, 'AppConfigEnvironment', {
@@ -58,20 +57,20 @@ export class AwsLambdaAppConfigStack extends Stack {
             environmentId: environment.ref,
         });
         deployment.addDependsOn(hostedConfigurationProfile);
-        
-        const layer = LayerVersion.fromLayerVersionArn(this, 'AppConfigExtensionLayer',
-            'arn:aws:lambda:us-east-1:027255383542:layer:AWS-AppConfig-Extension:69');
+    
+        /**
+         * This needs to match your specified region and lambda architecture
+         * @see {@link https://docs.aws.amazon.com/appconfig/latest/userguide/appconfig-integration-lambda-extensions-versions.html#appconfig-integration-lambda-extensions-versions-find} to find your version
+         */
+        const layer = LayerVersion.fromLayerVersionArn(this, 'AppConfigExtensionLayer', 'arn:aws:lambda:us-east-1:027255383542:layer:AWS-AppConfig-Extension:69');
         
         const lambda = new NodejsFunction(this, 'AppConfigDemoFunction', {
-            entry: join(__dirname, `./src/lambdas/demo/handler.ts`),
+            entry: join(__dirname, `./app/lambdas/demo/handler.ts`),
             handler: 'handler',
             depsLockFilePath: join(__dirname, `./package-lock.json`),
             runtime: Runtime.NODEJS_14_X,
             layers: [ layer ],
             environment: {
-                AWS_APPCONFIG_EXTENSION_HTTP_PORT: '2772',
-                AWS_APPCONFIG_EXTENSION_POLL_INTERVAL_SECONDS: '45',
-                AWS_APPCONFIG_EXTENSION_POLL_TIMEOUT_MILLIS: '3000',
                 AWS_APPCONFIG_APPLICATION: application.name,
                 AWS_APPCONFIG_ENVIRONMENT: environment.name,
                 AWS_APPCONFIG_CONFIGURATION: configurationProfile.name
@@ -88,12 +87,10 @@ export class AwsLambdaAppConfigStack extends Stack {
                 `arn:aws:appconfig:${this.region}:${this.account}:application/${application.ref}/environment/${environment.ref}/configuration/${configurationProfile.ref}`
             ]
         }));
-        
-        lambda.node.addDependency(application, environment, configurationProfile);
     }
 }
 
 const app = new App();
 new AwsLambdaAppConfigStack(app, 'AwsLambdaAppConfigStack', {
-    env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION }
+    env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: 'us-east-1' }
 });
